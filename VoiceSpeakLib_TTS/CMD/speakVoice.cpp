@@ -3,7 +3,7 @@
 speakVoice::speakVoice()
 {
 	pVoice = NULL;
-	if (FAILED(::CoInitialize(NULL))){
+	if (FAILED(::CoInitialize(NULL))) {
 		initRunBusyGood = false;
 		return;
 	}
@@ -15,6 +15,9 @@ speakVoice::speakVoice()
 	}
 
 	initRunBusyGood = true;
+
+	InitializeCriticalSection(&cs);
+
 
 	//maoSyncSpeak(L"成功构造语音系统");
 	maoSyncSpeak(L"");
@@ -32,7 +35,7 @@ speakVoice::~speakVoice()
 
 	if (pVoice == NULL)
 		return;
-	
+
 	pVoice->Release();
 	pVoice = NULL;
 	::CoUninitialize();
@@ -65,17 +68,15 @@ bool speakVoice::maoSyncSpeak(LPCWSTR words)
 {
 	// blocking call
 
-	if (initRunBusyGood == false)
-		return false;
+	if (initRunBusyGood != false) {
 
-	//initRunBusyGood = false;
-	HRESULT hResult = pVoice->Speak(words, SPF_DEFAULT, NULL);
+		initRunBusyGood = false;
+		HRESULT hResult = pVoice->Speak(words, SPF_DEFAULT, NULL);
 
-	if (FAILED(hResult)) {
-		return false;
+		if (SUCCEEDED(hResult)) {
+			initRunBusyGood = true;
+		}
 	}
-	else {
-		initRunBusyGood = true;
-		return true;
-	}
+
+	return false;
 }
